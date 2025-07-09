@@ -5,8 +5,16 @@ import bodyParser from "body-parser";
 import connectDB from "./configs/db.js";
 import { clerkMiddleware } from "@clerk/express";
 import clerkWebHooks from "./controllers/clerkWebhooks.js";
-
+import userRouter from "./routes/userRoutes.js";
+import { protect } from "./middleware/authMiddleware.js";
+import hotelRouter from "./routes/hotelroutes.js";
+import connectCloudinary from "./configs/cloudinary.js";
+import roomRouter from "./routes/roomRoutes.js";
+import bookingRouter from "./routes/bookingroutes.js";
 connectDB();
+
+connectCloudinary();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -17,6 +25,12 @@ app.use(clerkMiddleware());
 app.post("/api/clerk", clerkWebHooks); // ✅ Correct webhook route
 
 app.get("/", (req, res) => res.send("Api work kar"));
+app.use("/api/user", userRouter);
+
+app.use("/api/hotel", hotelRouter);
+app.use("/api/rooms", roomRouter);
+
+app.use("/api/bookings", bookingRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`server is running on ${PORT}`));
