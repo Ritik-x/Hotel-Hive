@@ -15,14 +15,16 @@ connectDB();
 
 connectCloudinary();
 
+console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY);
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware());
 
 // ✅ Webhook needs raw body parsing
-// app.use("/api/clerk", bodyParser.raw({ type: "*/*" }));
-app.post("/api/clerk", clerkWebHooks); // ✅ Correct webhook route
+app.use("/api/clerk", bodyParser.raw({ type: "*/*" }));
+app.post("/api/clerk", clerkWebHooks);
 
 app.get("/", (req, res) => res.send("Api work kar"));
 app.use("/api/user", userRouter);

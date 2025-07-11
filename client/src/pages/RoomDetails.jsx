@@ -19,7 +19,7 @@ const RoomDetails = () => {
     room && setRoom(room);
 
     room && setMainImage(room.images[0]);
-  }, []);
+  }, [id]);
 
   return (
     room && (

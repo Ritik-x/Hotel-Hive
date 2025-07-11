@@ -1,6 +1,8 @@
 import React, { useRef, useState } from "react";
 import Title from "../../components/Title";
 import { assets } from "../../assets/assets";
+import { useAppContext } from "../../context/AppContext";
+import toast from "react-hot-toast";
 
 const AMENITIES = [
   { label: "FREE WIFI", icon: assets.freeWifiIcon },
@@ -11,6 +13,8 @@ const AMENITIES = [
 ];
 
 const AddRoom = () => {
+  const { axios, getToken } = useAppContext();
+
   const [images, setImages] = useState([]);
   const [dragActive, setDragActive] = useState(false);
   const [inputs, setInputs] = useState({
@@ -64,10 +68,75 @@ const AddRoom = () => {
       </label>
     </div>
   );
+  const [loading, setLoading] = useState(false);
+
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+
+    if (
+      !inputs.roomType ||
+      !inputs.pricePerNight ||
+      !inputs.amenities ||
+      images.length === 0
+    ) {
+      toast.error("Pls fill all the details");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("roomType", inputs.roomType);
+      formData.append("pricePerNight", inputs.pricePerNight);
+
+      // convert amenities into array & keep only enabled amenities
+      const amenities = Object.keys(inputs.amenities).filter(
+        (key) => inputs.amenities[key]
+      );
+      formData.append("amenities", JSON.stringify(amenities));
+
+      // add images into form data
+      images.forEach((img) => {
+        formData.append("images", img);
+      });
+
+      const { data } = await axios.post("/api/rooms", formData, {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+
+      if (data.success) {
+        toast.success(data.message);
+
+        setInputs({
+          roomType: "",
+          pricePerNight: "",
+          amenities: {
+            "FREE WIFI": false,
+            "FREE BREAKFAST": false,
+            "ROOM SERVICE": false,
+            "MOUNTAIN VIEW": false,
+            "POOL ACCESS": false,
+          },
+        });
+
+        setImages([]);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 py-10 px-2">
-      <form className="max-w-4xl w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 flex flex-col md:flex-row overflow-hidden">
+      <form
+        onSubmit={onSubmitHandler}
+        className="max-w-4xl w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 flex flex-col md:flex-row overflow-hidden"
+      >
         {/* Left: Image upload */}
         <div className="md:w-1/2 p-8 flex flex-col items-center justify-center bg-gradient-to-br from-white/80 to-blue-50 relative">
           <div
@@ -188,7 +257,7 @@ const AddRoom = () => {
             type="submit"
             className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-pink-500 hover:to-blue-500 text-white font-bold py-4 rounded-2xl shadow-xl mt-10 text-lg tracking-wide transition-all duration-300 transform hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-pink-200 animate-bounce"
           >
-            ✨ Add Room
+            {loading ? "Adding..." : " ✨ Add Room "}
           </button>
         </div>
       </form>

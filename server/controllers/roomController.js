@@ -6,14 +6,13 @@ export const createRoom = async (req, res) => {
   try {
     const { roomType, pricePerNight, amenities } = req.body;
 
-    const hotel = await findOne({ owner: req.auth.userId });
+    const hotel = await Hotel.findOne({ owner: req.auth.userId });
 
     if (!hotel) return res.json({ success: false, message: "no hotel found" });
     //upload image to cloudinary
 
-    const uplaodImages = req.files.map(async (file) => {
+    const uploadImages = req.files.map(async (file) => {
       const response = await cloudinary.uploader.upload(file.path);
-
       return response.secure_url;
     });
     //wait for all uploads to complete
@@ -22,8 +21,8 @@ export const createRoom = async (req, res) => {
     await Room.create({
       hotel: hotel._id,
       roomType,
-      pricePerNight: pricePerNight,
-      amentities: JSON.parse(amentites),
+      pricePerNight,
+      amenities: JSON.parse(amenities),
       images,
     });
 
@@ -57,11 +56,11 @@ export const getRooms = async (req, res) => {
 
 export const getOwnerRooms = async (req, res) => {
   try {
-    const hotelData = await Hotel({ owner: req.auth.userId });
+    const hotelData = await Hotel.findOne({ owner: req.auth.userId });
 
-    const rooms = await roomRouter
-      .find({ hotel: hotelData._id.toString() })
-      .populate("hotel");
+    const rooms = await Room.find({ hotel: hotelData._id.toString() }).populate(
+      "hotel"
+    );
 
     res.json({ success: true, rooms });
   } catch (error) {

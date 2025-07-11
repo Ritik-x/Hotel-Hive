@@ -3,6 +3,11 @@ import User from "../models/user.js";
 
 export const registerHotel = async (req, res) => {
   try {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized: No user found" });
+    }
     const { name, address, contact, city } = req.body;
     const owner = req.user._id;
 
@@ -22,3 +27,5 @@ export const registerHotel = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+//add rooms in hotel , list of rooms  ,update room avail;ablity

@@ -1,5 +1,4 @@
 import React from "react";
-import { assets } from "../assets/assets";
 import { IoLogoInstagram } from "react-icons/io5";
 import { FaGithub } from "react-icons/fa6";
 import { RiTwitterXFill } from "react-icons/ri";

@@ -1,34 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Title from "../../components/Title";
 import { assets } from "../../assets/assets";
-
-// Local dummy data for rooms
-const dummyRooms = [
-  {
-    id: 1,
-    name: "Deluxe Suite",
-    price: 2000,
-    type: "Luxury Room",
-    image: assets.roomImg1,
-  },
-  {
-    id: 2,
-    name: "Family Suite",
-    price: 1500,
-    type: "Family Suite",
-    image: assets.roomImg2,
-  },
-  {
-    id: 3,
-    name: "Single Bed",
-    price: 800,
-    type: "Single Bed",
-    image: assets.roomImg3,
-  },
-];
+import { useAppContext } from "../../context/AppContext";
+import { toast } from "react-hot-toast";
 
 const Listroom = () => {
-  const [rooms] = useState(dummyRooms);
+  const [rooms, setRooms] = useState([]);
+  const { axios, user, getToken } = useAppContext();
+
+  const fetchRooms = async () => {
+    try {
+      const { data } = await axios.get("/api/rooms/owner", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+
+      if (data.success) {
+        setRooms(data.rooms);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchRooms();
+    }
+  }, [user]);
+
   return (
     <>
       <div>
@@ -51,19 +52,23 @@ const Listroom = () => {
             <tbody>
               {rooms.map((room) => (
                 <tr
-                  key={room.id}
+                  key={room._id || room.id}
                   className="border-t hover:bg-blue-50 transition"
                 >
                   <td className="py-2 px-4">
                     <img
-                      src={room.image}
-                      alt={room.name}
+                      src={room.images ? room.images[0] : assets.roomImg1}
+                      alt={room.roomType || room.name}
                       className="h-12 w-16 object-cover rounded"
                     />
                   </td>
-                  <td className="py-2 px-4 font-semibold">{room.name}</td>
-                  <td className="py-2 px-4">{room.type}</td>
-                  <td className="py-2 px-4">₹{room.price}</td>
+                  <td className="py-2 px-4 font-semibold">
+                    {room.roomType || room.name}
+                  </td>
+                  <td className="py-2 px-4">{room.roomType || room.type}</td>
+                  <td className="py-2 px-4">
+                    ₹{room.pricePerNight || room.price}
+                  </td>
                 </tr>
               ))}
             </tbody>

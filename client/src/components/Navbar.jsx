@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets.js";
 import { TfiSearch } from "react-icons/tfi";
 import {
@@ -8,8 +8,8 @@ import {
   SignInButton,
   useClerk,
   UserButton,
-  useUser,
 } from "@clerk/clerk-react";
+import { useAppContext } from "../context/AppContext.jsx";
 
 const BookIcon = () => (
   <svg
@@ -42,10 +42,10 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const { openSignIn } = useClerk();
-  const { user } = useUser();
-  const navigate = useNavigate();
+  // const { user } = useUser();
+  // const navigate = useNavigate();
   const location = useLocation();
-
+  const { user, navigate, isOwner, setShowHotelReg } = useAppContext();
   useEffect(() => {
     if (location.pathname !== "/") {
       setIsScrolled(true);
@@ -97,12 +97,14 @@ const Navbar = () => {
         ))}
         {user && (
           <button
-            onClick={() => navigate("/owner")}
+            onClick={() =>
+              isOwner ? navigate("/owner") : setShowHotelReg(true)
+            }
             className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${
               isScrolled ? "text-black" : "text-white"
             } transition-all`}
           >
-            Dashboard
+            {isOwner ? "Dashboard " : "list Your Hotel"}
           </button>
         )}
       </div>
@@ -111,17 +113,17 @@ const Navbar = () => {
       <div className="hidden md:flex items-center gap-4">
         <TfiSearch className="h-8 w-8 text-gray-700 hover:text-blue-500 transition-all duration-700" />
 
-        {user ? (
-          <UserButton>
-            <UserButton.Action.MenuItems>
-              <UserButton.Action
-                label="My Bookings"
-                labelIcon={<BookIcon />}
-                onClick={() => navigate("/my-bookings")}
-              />
-            </UserButton.Action.MenuItems>
-          </UserButton>
-        ) : null}
+        {user && (
+          <>
+            <UserButton />
+            <button
+              onClick={() => navigate("/mybookings")}
+              className="flex items-center gap-2 border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all text-gray-700 hover:bg-gray-100"
+            >
+              <BookIcon /> My Bookings
+            </button>
+          </>
+        )}
 
         {!user && (
           <button
@@ -163,31 +165,28 @@ const Navbar = () => {
         ))}
 
         {user && (
-          <button
-            onClick={() => {
-              setIsMenuOpen(false);
-              navigate("/owner");
-            }}
-            className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
-          >
-            Dashboard
-          </button>
+          <>
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                isOwner ? navigate("/owner") : setShowHotelReg(true);
+              }}
+              className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
+            >
+              {isOwner ? "Dashboard" : "List Your Hotel"}
+            </button>
+            <UserButton />
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                navigate("/mybookings");
+              }}
+              className="flex items-center gap-2 border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all text-gray-700 hover:bg-gray-100"
+            >
+              <BookIcon /> My Bookings
+            </button>
+          </>
         )}
-
-        {user ? (
-          <UserButton>
-            <UserButton.Action.MenuItems>
-              <UserButton.Action
-                label="My Bookings"
-                labelIcon={<BookIcon />}
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  navigate("/my-bookings");
-                }}
-              />
-            </UserButton.Action.MenuItems>
-          </UserButton>
-        ) : null}
 
         {!user && (
           <button

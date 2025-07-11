@@ -1,32 +1,68 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Title from "../../components/Title";
-import { assets, dashboardDummyData } from "../../assets/assets";
+import { assets } from "../../assets/assets";
 import { FaThreads } from "react-icons/fa6";
+import { useAppContext } from "../../context/AppContext";
+import { toast } from "react-hot-toast";
 
 const Dashboard = () => {
-  const [dashboarddata, setDashboarddata] = useState(dashboardDummyData);
+  const { getToken, axios, currency, user } = useAppContext();
+  const [dashboarddata, setDashboarddata] = useState({
+    bookings: [],
+    totalBookings: 0,
+    totalRevenue: 0,
+  });
+
+  const fetchDashboardData = async () => {
+    try {
+      const { data } = await axios.get("/api/bookings/hotel", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+
+      if (data.success && data.dashboarddata) {
+        setDashboarddata(data.dashboarddata);
+      } else {
+        setDashboarddata({
+          bookings: [],
+          totalBookings: 0,
+          totalRevenue: 0,
+        });
+        toast.error(data.message || "No dashboard data received.");
+      }
+    } catch (error) {
+      setDashboarddata({
+        bookings: [],
+        totalBookings: 0,
+        totalRevenue: 0,
+      });
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
+
   return (
     <>
       <div>
-        {" "}
         <Title
-          align="left "
-          font="outfit "
+          align="left"
+          font="outfit"
           title="Dashboard"
-          subTitle="Welcome back! Manage bookings, rooms, and hotel listings—all in one place.
-
-"
+          subTitle="Welcome back! Manage bookings, rooms, and hotel listings—all in one place."
         />
         <div className="flex gap-4">
           {/* total booking */}
-          <div className="border border-primary/10 bg-priamry/3  flex rounded  p-4 pr-8 ">
+          <div className="border border-primary/10 bg-primary/3 flex rounded p-4 pr-8">
             <img
               src={assets.totalBookingIcon}
-              alt="booking-img "
+              alt="booking-img"
               className="max-sm:hidden h-10"
             />
             <div className="flex flex-col sm:ml-4 font-medium">
-              {" "}
               <p className="text-blue-500 text-lg">Total Booking</p>
               <p className="text-neutral-500 text-base">
                 {dashboarddata.totalBookings}
@@ -35,17 +71,16 @@ const Dashboard = () => {
           </div>
 
           {/* total revenue */}
-          <div className="border border-primary/10 bg-priamry/3  flex rounded  p-4 pr-8 ">
+          <div className="border border-primary/10 bg-primary/3 flex rounded p-4 pr-8">
             <img
               src={assets.totalRevenueIcon}
-              alt="booking-img "
+              alt="booking-img"
               className="max-sm:hidden h-10"
             />
             <div className="flex flex-col sm:ml-4 font-medium">
-              {" "}
               <p className="text-blue-500 text-lg">Total Revenue</p>
               <p className="text-neutral-500 text-base">
-                $ {dashboarddata.totalRevenue}
+                {currency} {dashboarddata.totalRevenue}
               </p>
             </div>
           </div>
@@ -55,7 +90,7 @@ const Dashboard = () => {
           Recent Booking
         </h2>
         <div className="w-full max-w-3xl text-left border border-gray-400 rounded-lg max-h-80 overflow-y-scroll">
-          <table className="w-full ">
+          <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
                 <th className="py-3 px-4 text-gray-800 font-medium">
@@ -83,14 +118,14 @@ const Dashboard = () => {
                     {item.room.roomType}
                   </td>
                   <td className="py-3 px-4 text-gray-800 border-t text-center border-gray-400">
-                    $ {item.totalPrice}
+                    {currency} {item.totalPrice}
                   </td>
                   <td className="py-3 px-4 text-gray-100 border-t text-center border-gray-400">
                     <button
                       className={`py-2 px-4 text-xs rounded-4xl mx-auto ${
                         item.isPaid
-                          ? "bg-green-400 "
-                          : " bg-amber-200 text-amber-800"
+                          ? "bg-green-400"
+                          : "bg-amber-200 text-amber-800"
                       }`}
                     >
                       {item.isPaid ? "Completed" : "Pending"}
