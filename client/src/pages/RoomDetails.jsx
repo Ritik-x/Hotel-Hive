@@ -1,57 +1,120 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  assets,
-  facilityIcons,
-  roomCommonData,
-  roomsDummyData,
-} from "../assets/assets";
+import { assets, facilityIcons, roomCommonData } from "../assets/assets";
 import Starrating from "../components/Starrating";
+import { useAppContext } from "../context/AppContext";
+import toast from "react-hot-toast";
 // import { MdPhoneCallback } from "react-icons/md";
 
 const RoomDetails = () => {
   const { id } = useParams();
+  const { rooms, getToken, axios, navigate } = useAppContext();
+
   const [room, setRoom] = useState(null);
   const [mainImage, setMainImage] = useState(null);
+  const [checkInDate, setCheckInDate] = useState(null);
+  const [checkOutDate, setCheckOutDate] = useState(null);
+  const [guests, setGuests] = useState(1);
+  const [isAvailable, setIsAvailable] = useState(false);
+
+  // check if room is available
+  const checkAvailability = async () => {
+    try {
+      // check if checkin is greater than checkout
+      if (checkInDate >= checkOutDate) {
+        toast.error("Check-in date should be less than check-out date");
+        return;
+      }
+
+      const { data } = await axios.post("/api/bookings/check-availability", {
+        room: id,
+        checkInDate,
+        checkOutDate,
+      });
+
+      if (data.success) {
+        if (data.isAvailable) {
+          setIsAvailable(true);
+          toast.success("Room is available");
+        } else {
+          setIsAvailable(false);
+          toast.error("Room is not available");
+        }
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // onSubmit handler function to check whether the room is available to book or not
+  const onSubmitHandler = async (e) => {
+    try {
+      e.preventDefault();
+
+      if (!isAvailable) {
+        return checkAvailability();
+      } else {
+        const { data } = await axios.post(
+          "/api/bookings/book",
+          {
+            room: id,
+            checkInDate,
+            checkOutDate,
+            guests,
+            paymentMethod: "Pay At Hotel",
+          },
+          { headers: { Authorization: `Bearer ${await getToken()}` } }
+        );
+
+        if (data.success) {
+          toast.success(data.message);
+          navigate("/my-bookings");
+          window.scrollTo(0, 0);
+        } else {
+          toast.error(data.message);
+        }
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   useEffect(() => {
-    const room = roomsDummyData.find((room) => room._id === id);
+    const room = rooms.find((room) => room._id === id);
     room && setRoom(room);
-
     room && setMainImage(room.images[0]);
-  }, [id]);
+  }, [rooms, id]);
 
   return (
     room && (
       <>
         <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32">
           {/* Room details */}
-
           <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-            <h1 className="text-3xl md:text-4xl ">
+            <h1 className="text-3xl md:text-4xl">
               {room.hotel.name}{" "}
-              <span className="font-inter text-sm ">{room.roomType}</span>{" "}
+              <span className="font-inter text-sm">{room.roomType}</span>
             </h1>
             <p className="text-xs py-1.5 px-3 text-white bg-orange-400 rounded-full">
               20% off
             </p>
           </div>
 
-          {/* room  rating */}
+          {/* room rating */}
           <div className="flex items-center gap-1 mt-2">
             <Starrating />
-
             <p className="text-sm text-gray-600 font-medium">2000+ reviews</p>
           </div>
-          {/* room address */}
 
+          {/* room address */}
           <div className="flex items-center gap-1 text-gray-600 mt-2">
             <img src={assets.locationIcon} alt="" />
             <span>{room.hotel.address}</span>
           </div>
 
           {/* room image */}
-
           <div>
             <div>
               <img
@@ -82,7 +145,6 @@ const RoomDetails = () => {
           </div>
 
           {/* room highlights */}
-
           <div className="flex flex-col md:flex-row md:justify-between md:items-center mt-12 gap-8">
             <div className="flex flex-col max-w-2xl">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
@@ -115,7 +177,10 @@ const RoomDetails = () => {
           </div>
 
           {/* checkin checkout form */}
-          <form className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white shadow-2xl p-8 rounded-2xl mx-auto mt-16 max-w-6xl border border-gray-100 gap-6 md:gap-0">
+          <form
+            onSubmit={onSubmitHandler}
+            className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white shadow-2xl p-8 rounded-2xl mx-auto mt-16 max-w-6xl border border-gray-100 gap-6 md:gap-0"
+          >
             <div className="flex flex-col flex-wrap md:flex-row items-start md:items-center gap-6 md:gap-12 text-gray-600 w-full">
               <div>
                 <label
@@ -125,6 +190,8 @@ const RoomDetails = () => {
                   Check-In
                 </label>
                 <input
+                  onChange={(e) => setCheckInDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
                   type="date"
                   id="checkInDate"
                   placeholder="Check-in"
@@ -142,6 +209,9 @@ const RoomDetails = () => {
                   Check-Out
                 </label>
                 <input
+                  onChange={(e) => setCheckOutDate(e.target.value)}
+                  min={checkInDate}
+                  disabled={!checkInDate}
                   type="date"
                   id="checkOutDate"
                   placeholder="Check-out"
@@ -155,9 +225,11 @@ const RoomDetails = () => {
                   Guests
                 </label>
                 <input
+                  onChange={(e) => setGuests(e.target.value)}
+                  value={guests}
                   type="number"
                   id="guests"
-                  placeholder="0"
+                  placeholder="1"
                   min="1"
                   required
                   className="max-w-20 rounded-lg border border-gray-300 px-3 py-2 mt-1.5 outline-none focus:ring-2 focus:ring-purple-300 transition-all shadow-sm"
@@ -168,7 +240,7 @@ const RoomDetails = () => {
               className="bg-gradient-to-r from-purple-400 to-orange-400 hover:from-orange-400 hover:to-purple-400 active:scale-95 transition-all text-white rounded-lg max-md:w-full max-md:mt-6 md:px-10 py-3 md:py-4 text-lg font-bold shadow-lg"
               type="submit"
             >
-              Check Availablity
+              {isAvailable ? "Book Now" : "Check Availability"}
             </button>
           </form>
 

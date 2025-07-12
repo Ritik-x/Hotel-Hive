@@ -2,9 +2,8 @@ import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Rooms.js";
 
-//function to check wheather room is available or not
-
-const checkAvailablity = async (checkInDate, checkOutDate, room) => {
+//function to check whether room is available or not
+const checkAvailability = async (checkInDate, checkOutDate, room) => {
   try {
     const bookings = await Booking.find({
       room,
@@ -19,15 +18,17 @@ const checkAvailablity = async (checkInDate, checkOutDate, room) => {
   }
 };
 
-//  API to check availablity of room
-
-// POST / api/bookings/check-availabliuty
-
-export const checkAvailablityAPI = async (req, res) => {
+// API to check availability of room
+// POST /api/bookings/check-availability
+export const checkAvailabilityAPI = async (req, res) => {
   try {
     const { room, checkInDate, checkOutDate } = req.body;
 
-    const isAvailable = await checkAvailablity(checkInDate, checkOutDate, room);
+    const isAvailable = await checkAvailability(
+      checkInDate,
+      checkOutDate,
+      room
+    );
 
     res.json({ success: true, isAvailable });
   } catch (error) {
@@ -36,27 +37,32 @@ export const checkAvailablityAPI = async (req, res) => {
 };
 
 // API to create a new Booking
-//POST /api /booking/ book
-
+// POST /api/bookings/book
 export const createBooking = async (req, res) => {
   try {
     const { room, checkInDate, checkOutDate, guests } = req.body;
 
     const user = req.user._id;
 
-    const isAvailable = await checkAvailablity(checkInDate, checkOutDate, room);
+    const isAvailable = await checkAvailability(
+      checkInDate,
+      checkOutDate,
+      room
+    );
 
     if (!isAvailable) {
-      return res.json({ success: false, message: "Room Is not Available" });
+      return res.json({ success: false, message: "Room is not available" });
     }
 
-    //get total price from room
-
+    // get total price from room
     const roomData = await Room.findById(room).populate("hotel");
 
-    let totalPrice = roomData.pricePerNight;
-    //calculate total price based on night
+    if (!roomData) {
+      return res.json({ success: false, message: "Room not found" });
+    }
 
+    let totalPrice = roomData.pricePerNight;
+    // calculate total price based on nights
     const checkI = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
     const timeDiff = checkOut.getTime() - checkI.getTime();
@@ -75,28 +81,40 @@ export const createBooking = async (req, res) => {
       totalPrice,
     });
 
-    res.json({ success: true, message: "booking created successfully" });
+    res.json({ success: true, message: "Booking created successfully" });
   } catch (error) {
-    console.log(error);
-
-    res.json({ success: false, message: "failed ho gayi aapki booking" });
+    console.log("Booking creation error:", error);
+    res.json({ success: false, message: error.message });
   }
 };
-//Api to get all bookings from user
 
-//get /api/booking/user
-
+// API to get all bookings from user
+// GET /api/bookings/user
 export const getUserBookings = async (req, res) => {
   try {
+    console.log("User object:", req.user); // Debug log
+    console.log("User ID:", req.user._id); // Debug log
+
     const user = req.user._id;
 
+    if (!user) {
+      return res.json({ success: false, message: "User ID not found" });
+    }
+
+    // Find bookings and populate room and hotel data
     const bookings = await Booking.find({ user })
-      .populate("room hotel")
+      .populate("room")
+      .populate("hotel")
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, bookings });
+    console.log("Found bookings:", bookings.length);
+    console.log("Sample booking:", bookings[0]);
+
+    res.json({ success: true, bookings: bookings });
   } catch (error) {
-    res.json({ success: false, message: "failed to fetch bookings" });
+    console.log("getUserBookings error:", error);
+    console.log("Error stack:", error.stack);
+    res.json({ success: false, message: "Failed to fetch bookings" });
   }
 };
 
@@ -121,6 +139,7 @@ export const getHotelBookings = async (req, res) => {
 
     res.json({ success: true, dashboardData: { totalBookings, totalRevenue } });
   } catch (error) {
+    console.log("getHotelBookings error:", error);
     res.json({ success: false, message: error.message });
   }
 };

@@ -2,7 +2,7 @@ import express from "express";
 
 import { protect } from "../middleware/authMiddleware.js";
 import {
-  checkAvailablityAPI,
+  checkAvailabilityAPI,
   createBooking,
   getHotelBookings,
   getUserBookings,
@@ -10,7 +10,7 @@ import {
 
 const bookingRouter = express.Router();
 
-bookingRouter.post("/check-availablity", checkAvailablityAPI);
+bookingRouter.post("/check-availability", checkAvailabilityAPI);
 
 bookingRouter.post("/book", protect, createBooking);
 

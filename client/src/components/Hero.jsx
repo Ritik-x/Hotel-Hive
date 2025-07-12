@@ -1,20 +1,54 @@
-import React from "react";
+import React, { useState } from "react";
 import { cities } from "../assets/assets";
 import { SlCalender } from "react-icons/sl";
 import { MdContentPasteSearch } from "react-icons/md";
+import { useAppContext } from "../context/AppContext";
 
 const Hero = () => {
+  const { navigate, getToken, axios, setSearchedCities } = useAppContext();
+
+  const [destination, setDestination] = useState("");
+
+  const onSearch = async (e) => {
+    e.preventDefault();
+
+    navigate(`/rooms?destination=${destination}`);
+
+    // call api to save recent searched cities
+    try {
+      await axios.post(
+        "/api/user/store-recent-search",
+        { recentSearchedCity: destination },
+        {
+          headers: { Authorization: `Bearer ${await getToken()}` },
+        }
+      );
+
+      // add destination to recent searched cities max 3
+      setSearchedCities((prevSearchedCities) => {
+        const updatedSearchedCities = [...prevSearchedCities, destination];
+
+        if (updatedSearchedCities.length > 3) {
+          updatedSearchedCities.shift();
+        }
+        return updatedSearchedCities;
+      });
+    } catch (error) {
+      console.error("Error saving recent search:", error);
+    }
+  };
+
   return (
     <>
-      <div className='flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url("/src/assets/heroImage.png")] bg-no-repeat bg-cover bg-center h-screen'>
+      <div className="flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url('/src/assets/heroImage.png')] bg-no-repeat bg-cover bg-center h-screen">
         <p className="bg-amber-800 px-4 py-1 rounded-full mt-20">
           Stay better with HotelHive.
         </p>
-        <h1 className="font-poppins text-2xl md:text-6xl md:text-[56px] md:leading-[56px] font-bold md:font-extrabold max:w-xl mt-4">
+        <h1 className="font-poppins text-2xl md:text-6xl md:text-[56px] md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4">
           🏨 HotelHive — Your Smart Stay Companion
         </h1>
 
-        <p className="max-w-130  mt-2 text-sm md:text-base">
+        <p className="max-w-130 mt-2 text-sm md:text-base">
           HotelHive is a modern, responsive hotel booking web application
           designed to simplify travel planning. It allows users to search,
           explore, and book curated hotel stays with ease and efficiency.
@@ -22,11 +56,10 @@ const Hero = () => {
           HotelHive connects you to the right stay in just a few clicks.
         </p>
         <form
-          className="
-           text-gray-100 shadow-lg rounded-xl px-6 py-6 
+          onSubmit={onSearch}
+          className="text-gray-100 shadow-lg rounded-xl px-6 py-6 
           flex flex-col md:flex-row md:items-end gap-4 md:gap-6
-          max-w-3xl w-full mt-8
-        "
+          max-w-3xl w-full mt-8"
         >
           {/* Destination */}
           <div className="flex-1">
@@ -54,6 +87,8 @@ const Hero = () => {
               Destination
             </label>
             <input
+              onChange={(e) => setDestination(e.target.value)}
+              value={destination}
               list="destinations"
               id="destinationInput"
               type="text"
@@ -63,10 +98,9 @@ const Hero = () => {
             />
 
             <datalist id="destinations">
-              {" "}
               {cities.map((city, index) => (
                 <option value={city} key={index} />
-              ))}{" "}
+              ))}
             </datalist>
           </div>
 
@@ -119,16 +153,13 @@ const Hero = () => {
 
           {/* Search Button */}
           <button
-            className="
-              flex items-center justify-center gap-2 rounded-lg
+            className="flex items-center justify-center gap-2 rounded-lg
               bg-primary hover:bg-secondary text-white font-semibold
               py-3 px-6 mt-2 md:mt-0 shadow transition-all duration-300
-              w-full md:w-auto
-            "
+              w-full md:w-auto"
             type="submit"
           >
             <MdContentPasteSearch />
-
             <span>Search</span>
           </button>
         </form>

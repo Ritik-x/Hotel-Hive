@@ -5,11 +5,13 @@ import ExclusiveOffers from "../components/ExclusiveOffers";
 import Testimonial from "../components/Testimonial";
 import NewsLetter from "../components/NewsLetter";
 import Footer from "../components/Footer";
+import RecommandedHotels from "../components/RecommandedHotels.jsx";
 
 const Home = () => {
   return (
     <>
       <Hero />
+      <RecommandedHotels />
 
       <FeaturedDestination />
       <ExclusiveOffers />
