@@ -85,3 +85,48 @@ export const toogleRoomAvailablity = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// api to delete a room
+export const deleteRoom = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+
+    // Find the room and populate hotel to check ownership
+    const room = await Room.findById(roomId).populate("hotel");
+
+    if (!room) {
+      return res.json({ success: false, message: "Room not found" });
+    }
+
+    // Check if the user owns the hotel
+    const hotel = await Hotel.findOne({ owner: req.auth.userId });
+    if (!hotel || room.hotel._id.toString() !== hotel._id.toString()) {
+      return res.json({
+        success: false,
+        message: "Not authorized to delete this room",
+      });
+    }
+
+    // Delete images from Cloudinary if they exist
+    if (room.images && room.images.length > 0) {
+      const deletePromises = room.images.map(async (imageUrl) => {
+        try {
+          // Extract public_id from Cloudinary URL
+          const publicId = imageUrl.split("/").pop().split(".")[0];
+          await cloudinary.uploader.destroy(publicId);
+        } catch (error) {
+          console.log("Error deleting image from Cloudinary:", error);
+        }
+      });
+      await Promise.all(deletePromises);
+    }
+
+    // Delete the room from database
+    await Room.findByIdAndDelete(roomId);
+
+    res.json({ success: true, message: "Room deleted successfully" });
+  } catch (error) {
+    console.log("Delete room error:", error);
+    res.json({ success: false, message: error.message });
+  }
+};

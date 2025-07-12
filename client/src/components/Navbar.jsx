@@ -70,11 +70,14 @@ const Navbar = () => {
     >
       {/* Logo */}
       <Link to="/">
-        <img
-          src={assets.logo}
-          alt="logo"
-          className={`h-9 ${isScrolled && "invert opacity-80"}`}
-        />
+        <span
+          className={`h-9 ${
+            isScrolled && "invert opacity-80 text-5xl text-gray-600"
+          }`}
+        >
+          {" "}
+          Hotel-Hive
+        </span>
       </Link>
 
       {/* Desktop Nav */}

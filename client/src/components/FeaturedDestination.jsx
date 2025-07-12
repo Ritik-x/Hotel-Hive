@@ -1,7 +1,7 @@
 import React from "react";
 // import { roomsDummyData } from "../assets/assets";
 import HotelCard from "./HotelCard";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import Title from "./Title";
 import { useAppContext } from "../context/AppContext";
 
