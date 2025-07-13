@@ -95,6 +95,10 @@ const Listroom = () => {
                         src={room.images ? room.images[0] : assets.roomImg1}
                         alt={room.roomType || room.name}
                         className="h-12 w-16 object-cover rounded"
+                        onError={(e) => {
+                          e.target.src =
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='48' viewBox='0 0 64 48'%3E%3Crect width='64' height='48' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='8' fill='%236b7280'%3ENo Image%3C/text%3E%3C/svg%3E";
+                        }}
                       />
                     </td>
                     <td className="py-2 px-4 font-semibold">

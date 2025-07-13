@@ -6,7 +6,7 @@ export const createRoom = async (req, res) => {
   try {
     const { roomType, pricePerNight, amenities } = req.body;
 
-    const hotel = await Hotel.findOne({ owner: req.auth.userId });
+    const hotel = await Hotel.findOne({ owner: req.user._id });
 
     if (!hotel) return res.json({ success: false, message: "no hotel found" });
     //upload image to cloudinary
@@ -56,7 +56,7 @@ export const getRooms = async (req, res) => {
 
 export const getOwnerRooms = async (req, res) => {
   try {
-    const hotelData = await Hotel.findOne({ owner: req.auth.userId });
+    const hotelData = await Hotel.findOne({ owner: req.user._id });
 
     const rooms = await Room.find({ hotel: hotelData._id.toString() }).populate(
       "hotel"
@@ -99,7 +99,7 @@ export const deleteRoom = async (req, res) => {
     }
 
     // Check if the user owns the hotel
-    const hotel = await Hotel.findOne({ owner: req.auth.userId });
+    const hotel = await Hotel.findOne({ owner: req.user._id });
     if (!hotel || room.hotel._id.toString() !== hotel._id.toString()) {
       return res.json({
         success: false,

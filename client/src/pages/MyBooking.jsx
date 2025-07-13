@@ -81,10 +81,14 @@ const MyBooking = () => {
                   <img
                     src={
                       booking.room?.images?.[0] ||
-                      "https://via.placeholder.com/300x200?text=No+Image"
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='300' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='16' fill='%236b7280'%3ENo Image Available%3C/text%3E%3C/svg%3E"
                     }
                     alt="hotel-img"
                     className="md:w-36 w-full h-32 md:h-24 rounded-xl shadow object-cover border border-gray-200"
+                    onError={(e) => {
+                      e.target.src =
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='300' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='16' fill='%236b7280'%3ENo Image Available%3C/text%3E%3C/svg%3E";
+                    }}
                   />
                   <div className="flex flex-col gap-2 md:ml-2 w-full">
                     <p className="text-xl font-semibold text-gray-900">

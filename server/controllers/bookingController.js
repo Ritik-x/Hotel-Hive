@@ -129,16 +129,38 @@ export const getUserBookings = async (req, res) => {
   } catch (error) {
     console.log("getUserBookings error:", error);
     console.log("Error stack:", error.stack);
+
+    // If it's a schema error, try without populate first
+    if (error.message.includes("Schema hasn't been registered")) {
+      try {
+        const bookings = await Booking.find({ user }).sort({ createdAt: -1 });
+        console.log("Found bookings without populate:", bookings.length);
+        res.json({ success: true, bookings: bookings });
+        return;
+      } catch (populateError) {
+        console.log("Error even without populate:", populateError);
+      }
+    }
+
     res.json({ success: false, message: "Failed to fetch bookings" });
   }
 };
 
 export const getHotelBookings = async (req, res) => {
   try {
-    const hotel = await Hotel.findOne({ owner: req.auth.userId });
+    console.log("User ID:", req.user._id); // Debug log
+    console.log("User object:", req.user); // Debug log
+
+    const hotel = await Hotel.findOne({ owner: req.user._id });
+    console.log("Found hotel:", hotel); // Debug log
 
     if (!hotel) {
-      return res.json({ success: false, message: "No Hotel Found" });
+      return res.json({
+        success: false,
+        message: "No Hotel Found",
+        needsRegistration: true,
+        userId: req.user._id,
+      });
     }
 
     const bookings = await Booking.find({ hotel: hotel._id })
@@ -152,9 +174,45 @@ export const getHotelBookings = async (req, res) => {
       0
     );
 
-    res.json({ success: true, dashboardData: { totalBookings, totalRevenue } });
+    res.json({
+      success: true,
+      dashboardData: { totalBookings, totalRevenue, bookings },
+    });
   } catch (error) {
     console.log("getHotelBookings error:", error);
+
+    // If it's a schema error, try without populate first
+    if (error.message.includes("Schema hasn't been registered")) {
+      try {
+        const hotel = await Hotel.findOne({ owner: req.user._id });
+        if (!hotel) {
+          return res.json({
+            success: false,
+            message: "No Hotel Found",
+            needsRegistration: true,
+            userId: req.user._id,
+          });
+        }
+
+        const bookings = await Booking.find({ hotel: hotel._id }).sort({
+          createdAt: -1,
+        });
+        const totalBookings = bookings.length;
+        const totalRevenue = bookings.reduce(
+          (acc, booking) => acc + booking.totalPrice,
+          0
+        );
+
+        res.json({
+          success: true,
+          dashboardData: { totalBookings, totalRevenue, bookings },
+        });
+        return;
+      } catch (populateError) {
+        console.log("Error even without populate:", populateError);
+      }
+    }
+
     res.json({ success: false, message: error.message });
   }
 };

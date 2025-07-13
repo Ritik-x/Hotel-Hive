@@ -121,6 +121,10 @@ const RoomDetails = () => {
                 src={mainImage}
                 alt="Room Image"
                 className="w-full h-80 md:h-[28rem] object-cover object-center rounded-2xl shadow-2xl border-4 border-white bg-gradient-to-br from-orange-100 via-white to-orange-50 transition-transform duration-300 hover:scale-105"
+                onError={(e) => {
+                  e.target.src =
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect width='800' height='600' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='24' fill='%236b7280'%3ENo Image Available%3C/text%3E%3C/svg%3E";
+                }}
               />
             </div>
 
@@ -138,6 +142,10 @@ const RoomDetails = () => {
                         ? "border-orange-500 ring-2 ring-orange-300"
                         : "border-gray-300"
                     }`}
+                    onError={(e) => {
+                      e.target.src =
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='64' viewBox='0 0 80 64'%3E%3Crect width='80' height='64' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='8' fill='%236b7280'%3ENo Image%3C/text%3E%3C/svg%3E";
+                    }}
                   />
                 ))}
               </div>

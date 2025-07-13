@@ -14,7 +14,14 @@ const HotelCard = ({ room, index }) => {
         key={room._id}
         className="relative max-w-70 w-full rounded-xl overflow-hidden bg-white text-gray -500-80 shadow-[0px_4px_4px_rgba(0,0,0,0.05)]"
       >
-        <img src={room.images[0]} alt="" />
+        <img
+          src={room.images[0]}
+          alt=""
+          onError={(e) => {
+            e.target.src =
+              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='300' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='16' fill='%236b7280'%3ENo Image Available%3C/text%3E%3C/svg%3E";
+          }}
+        />
         {index % 2 === 0 && (
           <p className="font-medium px-4 py-2 absolute top-3 left-6 text-xs bg-white text-gray-600  rounded-full">
             Best Seller
